@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-import mysql.connector
+import pymongo
 
 
 def defGetPage():
@@ -67,29 +67,20 @@ def defGetPage():
     return rows
 
 
-def putToDb(data, mydb):
-    cursor = mydb.cursor()
-    sql = 'INSERT INTO StarWarsBooks (title, timeline,author,released) VALUES (%s, %s,%s,%s)'
-    # Format each row and put to the database
-    for x in data:
-        val = (x['title'], x['timeline'], x['author'], x['released'].strip())
-        cursor.execute(sql, val)
-    mydb.commit()
+def putToDb(data, mycol):
+    mycol.insert_many(data)
+
 
 
 def main():
     # Get books from https://starwars.fandom.com/wiki/Timeline_of_Legends_books
     data = defGetPage()
     # Connect to mysql db
-    mydb = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        # Enter password here
-        password="<Password>",
-        # Enter Db here
-        database='<DB>'
-    )
-    putToDb(data, mydb)
+    myclient = pymongo.MongoClient("<URI>")
+
+    mydb = myclient["Cluster0"]
+    mycol = mydb["starwarsBooks"]
+    putToDb(data, mycol)
 
 
 if __name__ == '__main__':
